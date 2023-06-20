@@ -1,0 +1,140 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"name":"csharp"}]}}
+
+#!markdown
+
+# God is a Cube
+
+## Introduction
+I intend to resume development on God is a Cube, and to actually finish it.
+
+The game is still "99% finished", with a lot of small things to make it better.
+
+It's true that there is a lot of unattended business. Questions I did not want to ask myself and things I did not want to see. That's why I did not want to take the risk to open the project, or even to start making another game.
+
+But I realized that my real life efforts to improve my life have paid of. My life is stable, I have a good job enough to start working again on a video game project without the risk of devoting again my whole life to it. 
+
+Besides, I became a C# expert, working on high performance software for top banking and oil companies. All the things that were drawing me back on God is a Cube now feel far much easier. Not that I became smarter, it's just that I clearly did not know how to work properly on a 50,000 lines of code project. Now that I have worked on 15 years old and 3,5 millions lines of code software, God is a Cube seems to be far much easier.
+
+So I can work again on God is a Cube, as a hobby. I intend to spend 5 to 10 hours every week on it.
+
+#!markdown
+
+## The choice of the last version
+
+The last save of the original code dates from 2018-12-16.
+
+In 2019, I spent a few months working on at least 2 variants:
+* a Unity 2018 version
+* a mix between God is a Cube and another project (Matrix), to use the voxel rendering
+
+All those variants have been a mess, where I just copy pasted the whole source code into nother projects.
+
+I am starting back from the last original save.
+
+#!markdown
+
+## The corresponding Unity version
+
+I started working on God is a Cube in December 2012, and set my choice on a Unity version from the time, Unity v4.0.1. I kept this version during all development, as any update can break something somewhere.
+
+Tech stacks are fragile, especially video game tech stacks. I heard about studios who "freeze everything", they disable all softwares updates (even Windows updates) for up to 4 years.
+
+Hopefully, as I am a cautious man, I kept an original of the setup software, along with an offline way to run it. Long story short, it took me only around 30 minutes to install my Unity version from 2012 and to launch the project.
+
+![](image/2023_06_19-23h05m05s-GiaC-Unity-launch.png)
+
+#!markdown
+
+What struck me the most on the title screen is the "alpha" on the title. Yes, the game is still on alpha, after all those years, despite being 99% finished.
+
+There is also the copyright at the bottom. 2018, since the last time I updated the game. And 2012, when I started working on the game. More than 10 years ago.
+
+It feels like I put a whole part of my life in a box, closed it, and did not dare to open it for half a decade.
+
+The game seems to be running fine. I can play a few levels. No warning, no problems. I'm glad everything seems to be fine right from the box. The game was developped on a Windows XP from 2006, I was not sure it would work in 2023. I'm glad that I did not trust any shady plugin and always tried to rely on the most basic version of any third party source. The fact the game was made to be as compatible as possible to Linux and Windows version certainlyhelped.
+
+#!markdown
+
+## The concerns
+
+### The unecessary files
+There are a lot of unecessary files in the project, usually textures, some of them over 20 Mb. In less than a minute, I found so many strange things, including prototypes, and even some 3D files I used for tests dating from 2000. I never removed anything, by fear it could be used somewhere, but it's worse than that. 
+
+Action:
+* Find a way to know if resource files are used in a Unity project (from 2012)
+* Deep clean all folders
+
+### The third party code
+I remember adding the complete source code of a SQLite implementation, around 75,000 lines of code. It helped a lot to have a better compatibility with non-Windows version. But now I'm telling myself that adding so much code is a bad idea, especially directly in a sub folder of the Unity project. Sadly, I did not have much of a choice, as Unity forces to put the C# code in the project itself, and there was no symbolic links on Windows XP to put all that in another folder.
+
+Action:
+* Identify third party code
+* Separate third party code from the rest
+
+### The online
+What about the online part of the game? At the end of each level, there is a comparison with all the players scores. In case the server no longer works, there is a copy of the scores in the game's files, but it was not updated for years.
+Hopefully, I blocked then removed the forum, as it was running on the same database than the game, and could be filled by spam bots until the whole database is full and locked.
+
+Action:
+* check if the online scores still work
+* check if the server still records player solutions
+* check how complete is the offline copy, compared to the online version
+
+### The build pipeline
+The game executables are automatically created thanks to several scripts. I remember writing them in Ruby. I did not really work with Ruby since 2009. I made some scripts, though. I also made a new version of my localization software for RPG Maker called DreaMaker, to make it work on Windows 10 (in 2021), but I wrote as few Ruby as possible.
+
+I could rewrite those scripts in C# script (thanks to Polyglot Notebooks), but I think the ruby version should be fine.
+
+Action:
+* check the Ruby pipeline scripts
+
+### The Linux and Mac versions
+I was very proud to support Linux (and Mac). But I am not a Linux user, so I was not even able to test the game on a Linux configuration. I still think the Linux community is a good fit for the game, as there are a lot
+
+Action:
+* check the amount of Linux and Mac version sold, for all life time and during recent years
+* see if other programming games are making a Linux version
+
+### The site
+The site still has a lot of info about the crowdfunding, and offers to buy the game thanks to an Humble plugin. My accountant told me there was no sales on Humble for a year, so I should disable all of that.
+
+Action:
+* make a new, simple web page
+* remove the Humble plugin to buy the game
+
+### The crowdfunding rewards
+I promised several (simple) things to early buyers of God is a Cube, such as adding their names in the credits or in the game. I'm glad my job as a crowdunfing expert made me avoid any kind of physical reward.
+
+Action:
+* work on an online form for the different backer tiers
+
+### The sales
+I am getting an email every month from Valve telling me there is not enough money from sales for them to send me something. I have no idea if the game is still selling units.
+
+Action:
+* check the last years sales stats of the game
+
+### The wishlists
+There was around 7,000 wishlists. Though, I remember numbers were getting smaller.
+
+Action:
+* check the evolution of the number of wishlists
+
+### The reviews
+The game has only around 10 reviews, with only 50% positive. I think the game could reach 70% positive reviews.
+
+Action:
+* work on the Steam page to have a better description of the content of the game
+* ask for advice about how to describe the game
+
+#!markdown
+
+## A first conclusion
+
+There is a lot of concerns, even non-programming ones. A few years ago, it was terrifying for me. But now, I see it as an escaping from all those serious real life concerns I have, when I work everyday on code far much bigger than my old video game.
+
+Adressing real life issues with code, by making software for a living, has changed my perception of what is important or what should make feel afraid. I learn so many ways to solve problems on the long term, the pain is now to realize I did not know all of this when I was working on God is a Cube, and I was doing things the hard way.
+
+I think part of my soul is in this game, and I need to reclaim it by finishing this development. It should also be a veery good exercize, to see how much I have improved since I quit the video game industry.
