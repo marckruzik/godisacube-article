@@ -1,9 +1,3 @@
-#!meta
-
-{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"name":"csharp"}]}}
-
-#!markdown
-
 # Resuming God is a Cube
 
 ## Introduction
@@ -19,7 +13,7 @@ Besides, I became a C# expert, working on high performance software for top bank
 
 So I can work again on God is a Cube, as a hobby. I intend to spend 5 to 10 hours every week on it.
 
-#!markdown
+
 
 ## The choice of the last version
 
@@ -33,7 +27,7 @@ All those variants have been a mess, where I just copy pasted the whole source c
 
 I am starting back from the last original save.
 
-#!markdown
+
 
 ## The corresponding Unity version
 
@@ -45,7 +39,7 @@ Hopefully, as I am a cautious man, I kept an original of the setup software, alo
 
 ![](image/2023_06_19-23h05m05s-GiaC-Unity-launch.png)
 
-#!markdown
+
 
 What struck me the most on the title screen is the "alpha" on the title. Yes, the game is still on alpha, after all those years, despite being 99% finished.
 
@@ -55,7 +49,7 @@ It feels like I put a whole part of my life in a box, closed it, and did not dar
 
 The game seems to be running fine. I can play a few levels. No warning, no problems. I'm glad everything seems to be fine right from the box. The game was developped on a Windows XP from 2006, I was not sure it would work in 2023. I'm glad that I did not trust any shady plugin and always tried to rely on the most basic version of any third party source. The fact the game was made to be as compatible as possible to Linux and Windows version certainlyhelped.
 
-#!markdown
+
 
 ## The concerns
 
@@ -129,7 +123,7 @@ Action:
 * work on the Steam page to have a better description of the content of the game
 * ask for advice about how to describe the game
 
-#!markdown
+
 
 ## A first conclusion
 
