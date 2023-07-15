@@ -1,0 +1,32 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"name":"csharp"}]}}
+
+#!csharp
+
+#r "nuget: CliWrap, 3.6.4"
+
+#!csharp
+
+using System.IO;
+
+using CliWrap;
+
+#!csharp
+
+// variable
+string script_filepath = @"data_output\02-convertSQLite\2023_07_08-godisacuvqube_sqlite.sql";
+string importSQLite_folderpath = @"data_output\03-importSQLite";
+string importSQLite_filepath = Path.Join(importSQLite_folderpath, @"2023_07_08-godisacuvqube.sqlite");
+string sqlite_filepath = @"C:\Program Files\SQLite\sqlite3.exe";
+
+#!csharp
+
+// environment
+Directory.CreateDirectory(importSQLite_folderpath);
+
+#!csharp
+
+await Cli.Wrap(sqlite_filepath)
+    .WithArguments($"{importSQLite_filepath} \".read '{script_filepath}'\"")
+    .ExecuteAsync();

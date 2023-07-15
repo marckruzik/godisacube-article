@@ -1,0 +1,53 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"name":"csharp"}]}}
+
+#!csharp
+
+using System.IO;
+using System.Text.RegularExpressions;
+
+#!csharp
+
+// variable
+string archive_filepath = @"data_output\01-uncompress\2023_07_08-godisacuvqube_mysql_db.sql";
+string convertSQLite_folderpath = @"data_output\02-convertSQLite";
+string convertSQLite_filepath = Path.Join(convertSQLite_folderpath, "2023_07_08-godisacuvqube_sqlite.sql");
+
+#!csharp
+
+// environment
+Directory.CreateDirectory(convertSQLite_folderpath);
+
+#!csharp
+
+string content = File.ReadAllText(archive_filepath);
+
+// Remove engine
+content = Regex.Replace(content, @"ENGINE=MyISAM DEFAULT CHARSET=utf8", "");
+
+// Remove comments
+content = Regex.Replace(content, @"^\/\*!\d+ .*\*\/;", "", RegexOptions.Multiline);
+
+// Remove other MySQL commands
+content = Regex.Replace(content, @"^SET .*", "", RegexOptions.Multiline);
+content = Regex.Replace(content, @"^START .*", "", RegexOptions.Multiline);
+content = Regex.Replace(content, @"^USE .*", "", RegexOptions.Multiline);
+content = Regex.Replace(content, @"^CREATE DATABASE .*", "", RegexOptions.Multiline);
+content = Regex.Replace(content, @"^COMMIT;", "", RegexOptions.Multiline);
+
+// Remove several-lines MySQL commands
+content = Regex.Replace(content, @"(?:\r?\n|^)\s*ALTER TABLE .*?;", "", RegexOptions.Singleline);
+
+
+// Remove unsigned
+content = Regex.Replace(content, @"\) UNSIGNED", ")");
+
+// Change hexadecimal value into text
+content = Regex.Replace(content, @"0x(01[0-9][0-9a-fA-F]+)", "X'$1'");
+
+// Replace single quote bt two single quotes for escaping
+content = Regex.Replace(content, @"\\'", "''");
+
+
+File.WriteAllText(convertSQLite_filepath, content);

@@ -1,0 +1,82 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"name":"csharp"}]}}
+
+#!csharp
+
+#r "nuget: Microsoft.Data.Sqlite, 7.0.9"
+
+#!csharp
+
+using System.IO;
+
+using Microsoft.Data.Sqlite;
+
+#!csharp
+
+// variable
+string database_original_filepath = @"data_output\03-importSQLite\2023_07_08-godisacuvqube.sqlite";
+string clean_folderpath = @"data_output\04-clean";
+string database_clean_filepath = Path.Join(clean_folderpath, @"godisacuvqube-clean.sqlite");
+string sqlite_filepath = @"C:\Program Files\SQLite\sqlite3.exe";
+
+#!csharp
+
+// environment
+Directory.CreateDirectory(clean_folderpath);
+
+#!csharp
+
+File.Copy(database_original_filepath, database_clean_filepath);
+
+#!csharp
+
+public void ExecuteSql(string databasePath, string sqlCommand)
+{
+    using (var connection = new SqliteConnection($"Data Source={databasePath}"))
+    {
+        connection.Open();
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = sqlCommand;
+            command.ExecuteNonQuery();
+        }
+    }
+}
+
+public void sql(string sqlCommand)
+{
+    ExecuteSql(database_clean_filepath, sqlCommand);
+}
+
+#!csharp
+
+string query = """
+DROP TABLE IF EXISTS `LEVEL_RESULTS-ORIG`;
+DROP TABLE IF EXISTS `LEVEL_RESULTS-V00-05_14_03`;
+DROP TABLE IF EXISTS `LEVEL_RESULTS_DEV-ORIG`;
+DROP TABLE IF EXISTS `LEVEL_FEEDBACKS-V00-05_14_03`;
+DROP TABLE IF EXISTS `LEVEL_RESULTS-V00_05_13_00A`;
+DROP TABLE IF EXISTS `LEVEL_SOLUTIONS-V00_05_13_00A`;
+DROP TABLE IF EXISTS `LEVEL_FEEDBACKS-V00_05_13_00A`;
+DROP TABLE IF EXISTS `LEVEL_SOLUTIONS-V00_05_00_11A`;
+DROP TABLE IF EXISTS `LEVEL_RESULTS-V00_05_00_11A`;
+DROP TABLE IF EXISTS `LEVEL_SOLUTIONS-ORIG`;
+DROP TABLE IF EXISTS `LEVEL_SOLUTIONS-V00-05_14_03`;
+DROP TABLE IF EXISTS `LEVEL_SOLUTIONS_DEV-ORIG`;
+DROP TABLE IF EXISTS `LEVEL_SOLUTIONS_DEV_OLD`;
+DROP TABLE IF EXISTS `LEVEL_FEEDBACKS-V00_05_00_11A`;
+DROP TABLE IF EXISTS `LEVEL_RESULTS_DEV`;
+DROP TABLE IF EXISTS `LEVEL_RESULTS_DEV_OLD`;
+DROP TABLE IF EXISTS `CONNECTIONS_DEV`;
+DROP TABLE IF EXISTS `LEVEL_FEEDBACKS_DEV`;
+DROP TABLE IF EXISTS `LEVEL_SOLUTIONS_DEV`;
+DROP TABLE IF EXISTS `CARDS_DEV`;
+""";
+
+sql(query);
+
+#!csharp
+
+sql("VACUUM");

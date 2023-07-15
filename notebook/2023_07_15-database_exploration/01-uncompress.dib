@@ -1,0 +1,34 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"name":"csharp"}]}}
+
+#!csharp
+
+#r "nuget: CliWrap, 3.6.4"
+
+#!csharp
+
+using System.IO;
+
+using CliWrap;
+
+#!csharp
+
+// variable
+string archive_filepath = @"data_input\2023_07_08-godisacuvqube_mysql_db.7z";
+string uncompress_folderpath = @"data_output\01-uncompress";
+string sevenzip_filepath = @"C:\Program Files\7-Zip\7z.exe";
+
+#!csharp
+
+// environment
+if (Directory.Exists(uncompress_folderpath)) Directory.Delete(uncompress_folderpath, true);
+Directory.CreateDirectory(uncompress_folderpath);
+
+#!csharp
+
+string arg1 = $"e {archive_filepath} -o{uncompress_folderpath}";
+
+await Cli.Wrap(sevenzip_filepath)
+    .WithArguments(new[] {arg1}, false)
+    .ExecuteAsync();
