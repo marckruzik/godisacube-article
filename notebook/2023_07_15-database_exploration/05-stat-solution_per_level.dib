@@ -1,0 +1,139 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"name":"csharp"}]}}
+
+#!csharp
+
+#!import "05-stat-library.dib"
+
+#!csharp
+
+string this_chart_folderpath = @"data_output\05-chart\finished_per_month";
+Directory.CreateDirectory(this_chart_folderpath);
+
+#!csharp
+
+///////////////////////
+// Query
+///////////////////////
+
+var query =
+from row in ExecuteQuery("""
+SELECT date, res.level_aturl, chapter, chapter_sub, solution_id
+FROM level_results res
+JOIN level_campaign cp on res.level_aturl = cp.level_aturl
+""")
+where row.solution_id != -1
+
+let datetime = (DateTime)DateTime.ParseExact(row.date, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
+where datetime < new DateTime(2023, 7, 1)
+
+let chapter = int.Parse(row.chapter.ToString()) - 1
+let chapter_sub = int.Parse(row.chapter_sub.ToString())
+let level_number = (int)(chapter * 10 + chapter_sub)
+let level_aturl = (string)row.level_aturl
+
+orderby level_number
+
+select new {
+    level_number,
+    row.level_aturl,
+    chapter,
+    chapter_sub,
+    datetime,
+};
+var list_all = query.ToList();
+DateTime datetime_min = list_all.Min(o => o.datetime);
+DateTime datetime_max = list_all.Max(o => o.datetime);
+List<int> list_level_number = 
+    query
+    .Select(o => o.level_number)
+    .Distinct()
+    .OrderBy(x => x)
+    .ToList();
+
+double yMax =
+(
+from o in query
+group o by new {o.level_number, date_key = o.datetime.ToString("yyyy_MM")} into g
+select g.Count()
+).Max() * 1.01d;
+
+
+var lamb = (int this_level_number) => {
+
+var query2 =
+from o in query
+where o.level_number == this_level_number
+group o by o.datetime.ToString("yyyy_MM") into g
+let level_number = g.First().level_number
+let level_aturl = g.First().level_aturl
+let date_key = DateTime.ParseExact(g.Key, "yyyy_MM", CultureInfo.InvariantCulture)
+let count = g.Count()
+select new
+{
+    level_number,
+    g.First().chapter,
+    g.First().chapter_sub,
+    level_aturl,
+    date_key,
+    count
+};
+var list_data = query2.ToList();
+
+
+///////////////////////
+// Plot
+///////////////////////
+var plt = new ScottPlot.Plot(600, 400);
+var level = list_data.First();
+plt.Title($"Times the level is finished by month for" +
+    $"\n{level.level_number:D3}-{level.level_aturl} (Campaign {level.chapter + 1}-{level.chapter_sub})" +
+    $"\nfrom {datetime_min.ToString("yyyy-MM")}" +
+    $" to {datetime_max.ToString("yyyy-MM")}");
+
+double[] xs = list_data.Select(o => o.date_key.ToOADate()).ToArray();
+double[] ys = list_data.Select(o => (double)o.count).ToArray();
+var bar = plt.AddBar(ys, xs);
+bar.BarWidth = 20;
+bar.BorderLineWidth = 0;
+
+// Then tell the axis to display tick labels using a time format
+plt.XAxis.DateTimeFormat(true);
+
+plt.SetAxisLimitsX(datetime_min.ToOADate(), datetime_max.ToOADate());
+
+// Lower the graph to y 0
+plt.SetAxisLimitsY(-1.0d, yMax);
+
+// X Axis dates
+List<int> list_year = 
+list_all
+.Select(o => o.datetime.Year)
+.Distinct()
+.OrderBy(y => y)
+.ToList();
+double[] xPositions = list_year.Select(year => new DateTime(year, 1, 1).ToOADate()).ToArray();
+string[] xLabels = list_year.Select(year => year.ToString()).ToArray();
+plt.XAxis.ManualTickPositions(xPositions, xLabels);
+
+
+///////////////////////
+// Plot display
+///////////////////////
+display(plt);
+plt.SaveFig(Path.Join(this_chart_folderpath, $@"times_level_finished_per_month-{level.level_aturl}.png"));
+
+
+///////////////////////
+// Stat
+///////////////////////
+
+//display($"{list_solution_count.Last()} distinct solutions");
+
+};
+
+foreach(int level_number in list_level_number)
+{
+    lamb(level_number);
+}
