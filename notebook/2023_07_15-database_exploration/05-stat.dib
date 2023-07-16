@@ -1,0 +1,284 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"name":"csharp"}]}}
+
+#!csharp
+
+#r "nuget: Microsoft.Data.Sqlite, 7.0.9"
+
+#!csharp
+
+using System.IO;
+using System.Dynamic;
+using System.Globalization;
+
+using Microsoft.Data.Sqlite;
+
+#!csharp
+
+// variable
+string database_filepath = @"data_output\04-clean\godisacuvqube-clean.sqlite";
+string chart_folderpath = @"data_output\05-chart";
+
+#!csharp
+
+// environment
+Directory.CreateDirectory(chart_folderpath);
+
+#!csharp
+
+public void ExecuteNonQuery(string databasePath, string sqlCommand)
+{
+    using (var connection = new SqliteConnection($"Data Source={databasePath}"))
+    {
+        connection.Open();
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = sqlCommand;
+            command.ExecuteNonQuery();
+        }
+    }
+}
+
+public void sql(string sqlCommand)
+{
+    ExecuteNonQuery(database_filepath, sqlCommand);
+}
+
+#!csharp
+
+public IEnumerable<dynamic> ExecuteQuery(string databasePath, string sqlCommand)
+{
+    using (var connection = new SqliteConnection($"Data Source={databasePath}"))
+    {
+        connection.Open();
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = sqlCommand;
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    dynamic row = new ExpandoObject();
+                    var rowDict = (IDictionary<string, object>)row;
+
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        string columnName = reader.GetName(i);
+                        object columnValue = reader.GetValue(i);
+
+                        rowDict[columnName] = columnValue;
+                    }
+
+                    yield return row;
+                }
+            }
+        }
+    }
+}
+
+public IEnumerable<dynamic> ExecuteQuery(string sqlCommand)
+{
+    foreach(var x in ExecuteQuery(database_filepath, sqlCommand))
+    {
+        yield return x;
+    }
+}
+
+#!csharp
+
+ExecuteQuery("SELECT * FROM level_results LIMIT 0,100;").Skip(60).Take(3)
+
+#!csharp
+
+var query =
+from info in ExecuteQuery("SELECT * FROM level_results")
+let date = DateTime.ParseExact(info.date, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
+let date_month = date.ToString("yyyy-MM")
+
+where date < new DateTime(2023, 7, 1)
+
+group info by new {date = date_month} into g
+let date_month = g.Key.date
+let users = g.Select(info => info.user).Distinct()
+orderby date_month
+select new 
+{
+    date = DateTime.ParseExact(date_month, "yyyy-MM", CultureInfo.InvariantCulture),
+    date_month, 
+    count = users.Count(), 
+    users};
+query
+
+#!csharp
+
+#r "nuget: ScottPlot, 4.1.65"
+using Microsoft.DotNet.Interactive.Formatting;
+Formatter.Register(typeof(ScottPlot.Plot), (p, w) => 
+    w.Write(((ScottPlot.Plot)p).GetImageHTML()), HtmlFormatter.MimeType);
+
+#!csharp
+
+var list = query.ToList();
+
+#!csharp
+
+var plt = new ScottPlot.Plot(600, 400);
+plt.Title($"Monthly Active Users (level played)\nfrom {list.Min(o => o.date).ToString("yyyy-MM")} to {list.Max(o => o.date).ToString("yyyy-MM")}");
+
+double[] xs = list.Select(o => (double)o.date.ToOADate()).ToArray();
+double[] ys = list.Select(o => (double)o.count).ToArray();
+var bar = plt.AddBar(ys, xs);
+
+bar.BarWidth = 20;
+bar.BorderLineWidth = 0;
+
+// Then tell the axis to display tick labels using a time format
+plt.XAxis.DateTimeFormat(true);
+
+plt.SetAxisLimits(yMin: 0);
+
+plt
+
+#!csharp
+
+DateTime last = list.Max(o => o.date);
+
+int month_quantity = 12;
+
+var average = 
+list
+.Where(o => o.date > last.AddMonths(-month_quantity))
+.Average(o => o.count);
+
+display($"average of {average:N2} players on the last {month_quantity} months");
+
+#!csharp
+
+var query_connections =
+from info in ExecuteQuery("SELECT * FROM connections")
+let date = DateTime.ParseExact(info.date, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
+let date_month = date.ToString("yyyy-MM")
+
+where date < new DateTime(2023, 7, 1)
+
+group info by new {date = date_month} into g
+let date_month = g.Key.date
+let users = g.Select(info => info.name).Distinct()
+orderby date_month
+select new 
+{
+    date = DateTime.ParseExact(date_month, "yyyy-MM", CultureInfo.InvariantCulture),
+    date_month, 
+    count = users.Count(), 
+    users
+};
+
+
+var list_connections = query_connections.ToList();
+
+var plt = new ScottPlot.Plot(600, 400);
+plt.Title($"Monthly Active Users\nfrom {list_connections.Min(o => o.date).ToString("yyyy-MM")} to {list_connections.Max(o => o.date).ToString("yyyy-MM")}");
+
+double[] xs = list_connections.Select(o => (double)o.date.ToOADate()).ToArray();
+double[] ys = list_connections.Select(o => (double)o.count).ToArray();
+var bar = plt.AddBar(ys, xs);
+
+bar.BarWidth = 20;
+bar.BorderLineWidth = 0;
+
+// Then tell the axis to display tick labels using a time format
+plt.XAxis.DateTimeFormat(true);
+
+plt.SetAxisLimits(yMin: 0);
+
+display(plt);
+plt.SaveFig(Path.Join(chart_folderpath, "mau-connections.png"));
+
+DateTime last = query_connections.Max(o => o.date);
+
+int month_quantity = 12;
+
+var average = 
+query_connections
+.Where(o => o.date > last.AddMonths(-month_quantity))
+.Average(o => o.count);
+
+display($"average of {average:N2} players on the last {month_quantity} months");
+
+#!csharp
+
+from info in ExecuteQuery("SELECT * FROM connections")
+let date = DateTime.ParseExact(info.date, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
+let date_month = date.ToString("yyyy-MM")
+
+where date < new DateTime(2023, 7, 1)
+
+group info by info.name into g
+
+let user = g.Key
+let ip_count = g.Select(info => info.ip).Distinct().Count()
+orderby ip_count descending
+select new 
+{
+    ip_count,
+    user
+}
+
+#!csharp
+
+var query_connections =
+from info in ExecuteQuery("SELECT * FROM connections")
+let date = DateTime.ParseExact(info.date, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
+let date_month = date.ToString("yyyy-MM")
+
+where date < new DateTime(2023, 7, 1)
+where info.name != "juh9870"
+
+group info by new {date = date_month} into g
+let date_month = g.Key.date
+let users = g.Select(info => info.name).Distinct()
+orderby date_month
+select new 
+{
+    date = DateTime.ParseExact(date_month, "yyyy-MM", CultureInfo.InvariantCulture),
+    date_month, 
+    count = users.Count(), 
+    users
+};
+
+
+var list_connections = query_connections.ToList();
+
+var plt = new ScottPlot.Plot(600, 400);
+plt.Title($"Monthly Active Users\nfrom {list_connections.Min(o => o.date).ToString("yyyy-MM")} to {list_connections.Max(o => o.date).ToString("yyyy-MM")}");
+
+double[] xs = list_connections.Select(o => (double)o.date.ToOADate()).ToArray();
+double[] ys = list_connections.Select(o => (double)o.count).ToArray();
+var bar = plt.AddBar(ys, xs);
+
+bar.BarWidth = 20;
+bar.BorderLineWidth = 0;
+
+// Then tell the axis to display tick labels using a time format
+plt.XAxis.DateTimeFormat(true);
+
+plt.SetAxisLimits(yMin: 0);
+
+display(plt);
+plt.SaveFig(Path.Join(chart_folderpath, "mau-connections-without_juh9870.png"));
+
+
+DateTime last = query_connections.Max(o => o.date);
+
+int month_quantity = 12;
+
+var average = 
+query_connections
+.Where(o => o.date > last.AddMonths(-month_quantity))
+.Average(o => o.count);
+
+display($"average of {average:N2} players on the last {month_quantity} months");
