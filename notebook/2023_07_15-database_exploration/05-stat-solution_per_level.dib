@@ -122,7 +122,7 @@ plt.XAxis.ManualTickPositions(xPositions, xLabels);
 // Plot display
 ///////////////////////
 display(plt);
-plt.SaveFig(Path.Join(this_chart_folderpath, $@"times_level_finished_per_month-{level.level_aturl}.png"));
+plt.SaveFig(Path.Join(this_chart_folderpath, $@"{level.level_number:D3}-times_level_finished_per_month-{level.level_aturl}.png"));
 
 
 ///////////////////////
