@@ -109,8 +109,8 @@ select new
 {
     date = DateTime.ParseExact(date_month, "yyyy-MM", CultureInfo.InvariantCulture),
     date_month, 
-    count = users.Count(), 
-    users};
+    count = users.Count()
+};
 query
 
 #!csharp
@@ -122,42 +122,6 @@ Formatter.Register(typeof(ScottPlot.Plot), (p, w) =>
 
 #!csharp
 
-var list = query.ToList();
-
-#!csharp
-
-var plt = new ScottPlot.Plot(600, 400);
-plt.Title($"Monthly Active Users (level played)\nfrom {list.Min(o => o.date).ToString("yyyy-MM")} to {list.Max(o => o.date).ToString("yyyy-MM")}");
-
-double[] xs = list.Select(o => (double)o.date.ToOADate()).ToArray();
-double[] ys = list.Select(o => (double)o.count).ToArray();
-var bar = plt.AddBar(ys, xs);
-
-bar.BarWidth = 20;
-bar.BorderLineWidth = 0;
-
-// Then tell the axis to display tick labels using a time format
-plt.XAxis.DateTimeFormat(true);
-
-plt.SetAxisLimits(yMin: 0);
-
-plt
-
-#!csharp
-
-DateTime last = list.Max(o => o.date);
-
-int month_quantity = 12;
-
-var average = 
-list
-.Where(o => o.date > last.AddMonths(-month_quantity))
-.Average(o => o.count);
-
-display($"average of {average:N2} players on the last {month_quantity} months");
-
-#!csharp
-
 var query_connections =
 from info in ExecuteQuery("SELECT * FROM connections")
 let date = DateTime.ParseExact(info.date, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
@@ -194,83 +158,21 @@ bar.BorderLineWidth = 0;
 plt.XAxis.DateTimeFormat(true);
 
 plt.SetAxisLimits(yMin: 0);
+
+// X Axis dates
+List<int> list_year = 
+list_connections
+.Select(o => (int)o.date.Year)
+.Distinct()
+.OrderBy(y => y)
+.ToList();
+
+double[] xPositions = list_year.Select(year => new DateTime(year, 1, 1).ToOADate()).ToArray();
+string[] xLabels = list_year.Select(year => year.ToString()).ToArray();
+plt.XAxis.ManualTickPositions(xPositions, xLabels);
 
 display(plt);
 plt.SaveFig(Path.Join(chart_folderpath, "mau-connections.png"));
-
-DateTime last = query_connections.Max(o => o.date);
-
-int month_quantity = 12;
-
-var average = 
-query_connections
-.Where(o => o.date > last.AddMonths(-month_quantity))
-.Average(o => o.count);
-
-display($"average of {average:N2} players on the last {month_quantity} months");
-
-#!csharp
-
-from info in ExecuteQuery("SELECT * FROM connections")
-let date = DateTime.ParseExact(info.date, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
-let date_month = date.ToString("yyyy-MM")
-
-where date < new DateTime(2023, 7, 1)
-
-group info by info.name into g
-
-let user = g.Key
-let ip_count = g.Select(info => info.ip).Distinct().Count()
-orderby ip_count descending
-select new 
-{
-    ip_count,
-    user
-}
-
-#!csharp
-
-var query_connections =
-from info in ExecuteQuery("SELECT * FROM connections")
-let date = DateTime.ParseExact(info.date, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
-let date_month = date.ToString("yyyy-MM")
-
-where date < new DateTime(2023, 7, 1)
-where info.name != "juh9870"
-
-group info by new {date = date_month} into g
-let date_month = g.Key.date
-let users = g.Select(info => info.name).Distinct()
-orderby date_month
-select new 
-{
-    date = DateTime.ParseExact(date_month, "yyyy-MM", CultureInfo.InvariantCulture),
-    date_month, 
-    count = users.Count(), 
-    users
-};
-
-
-var list_connections = query_connections.ToList();
-
-var plt = new ScottPlot.Plot(600, 400);
-plt.Title($"Monthly Active Users\nfrom {list_connections.Min(o => o.date).ToString("yyyy-MM")} to {list_connections.Max(o => o.date).ToString("yyyy-MM")}");
-
-double[] xs = list_connections.Select(o => (double)o.date.ToOADate()).ToArray();
-double[] ys = list_connections.Select(o => (double)o.count).ToArray();
-var bar = plt.AddBar(ys, xs);
-
-bar.BarWidth = 20;
-bar.BorderLineWidth = 0;
-
-// Then tell the axis to display tick labels using a time format
-plt.XAxis.DateTimeFormat(true);
-
-plt.SetAxisLimits(yMin: 0);
-
-display(plt);
-plt.SaveFig(Path.Join(chart_folderpath, "mau-connections-without_juh9870.png"));
-
 
 DateTime last = query_connections.Max(o => o.date);
 
