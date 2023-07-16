@@ -1,0 +1,82 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"name":"csharp"}]}}
+
+#!csharp
+
+#!import "05-stat-library.dib"
+
+#!csharp
+
+///////////////////////
+// Query
+///////////////////////
+
+var query = 
+from row in ExecuteQuery("SELECT solution_id, date, level_aturl FROM level_results")
+where row.solution_id != -1
+orderby row.date
+select (
+    (int)row.solution_id, 
+    (DateTime)DateTime.ParseExact(row.date, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture),
+    (string)row.level_aturl
+);
+
+List<string> list_solution_key = new List<string>();
+List<int> list_solution_count = new List<int>();
+List<DateTime> list_datetime = new List<DateTime>();
+foreach((int solution_id, DateTime datetime, string level_aturl) in query)
+{
+    string solution_key = $"{level_aturl}-{solution_id}";
+    if (list_solution_key.Contains(solution_key) == true)
+    {
+        continue;
+    }
+    list_solution_key.Add(solution_key);
+    list_solution_count.Add(list_solution_key.Count());
+    list_datetime.Add(datetime);
+}
+
+
+///////////////////////
+// Plot
+///////////////////////
+var plt = new ScottPlot.Plot(600, 400);
+plt.Title($"Distinct solutions found per level" +
+    $"\nfrom {list_datetime.Min().ToString("yyyy-MM")}" +
+    $" to {list_datetime.Max().ToString("yyyy-MM")}");
+
+double[] xs = list_datetime.Select(date => date.ToOADate()).ToArray();
+double[] ys = list_solution_count.Select(count => (double)count).ToArray();
+var scatter = plt.AddScatterLines(xs, ys);
+
+// Then tell the axis to display tick labels using a time format
+plt.XAxis.DateTimeFormat(true);
+
+// Lower the graph to y 0
+plt.SetAxisLimits(yMin: 0);
+
+// X Axis dates
+List<int> list_year = 
+list_datetime
+.Select(datetime => datetime.Year)
+.Distinct()
+.OrderBy(y => y)
+.ToList();
+double[] xPositions = list_year.Select(year => new DateTime(year, 1, 1).ToOADate()).ToArray();
+string[] xLabels = list_year.Select(year => year.ToString()).ToArray();
+plt.XAxis.ManualTickPositions(xPositions, xLabels);
+
+
+///////////////////////
+// Plot display
+///////////////////////
+display(plt);
+plt.SaveFig(Path.Join(chart_folderpath, "distinct_solutions_per_level.png"));
+
+
+///////////////////////
+// Stat
+///////////////////////
+
+display($"{list_solution_count.Last()} distinct solutions");

@@ -1,0 +1,96 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"name":"csharp"}]}}
+
+#!csharp
+
+#r "nuget: Microsoft.Data.Sqlite, 7.0.9"
+
+#!csharp
+
+using System.IO;
+using System.Dynamic;
+using System.Globalization;
+
+using Microsoft.Data.Sqlite;
+
+#!csharp
+
+// variable
+string database_filepath = @"data_output\04-clean\godisacuvqube-clean.sqlite";
+string chart_folderpath = @"data_output\05-chart";
+
+#!csharp
+
+// environment
+Directory.CreateDirectory(chart_folderpath);
+
+#!csharp
+
+public void ExecuteNonQuery(string databasePath, string sqlCommand)
+{
+    using (var connection = new SqliteConnection($"Data Source={databasePath}"))
+    {
+        connection.Open();
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = sqlCommand;
+            command.ExecuteNonQuery();
+        }
+    }
+}
+
+public void sql(string sqlCommand)
+{
+    ExecuteNonQuery(database_filepath, sqlCommand);
+}
+
+#!csharp
+
+public IEnumerable<dynamic> ExecuteQuery(string databasePath, string sqlCommand)
+{
+    using (var connection = new SqliteConnection($"Data Source={databasePath}"))
+    {
+        connection.Open();
+
+        using (var command = connection.CreateCommand())
+        {
+            command.CommandText = sqlCommand;
+
+            using (var reader = command.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    dynamic row = new ExpandoObject();
+                    var rowDict = (IDictionary<string, object>)row;
+
+                    for (int i = 0; i < reader.FieldCount; i++)
+                    {
+                        string columnName = reader.GetName(i);
+                        object columnValue = reader.GetValue(i);
+
+                        rowDict[columnName] = columnValue;
+                    }
+
+                    yield return row;
+                }
+            }
+        }
+    }
+}
+
+public IEnumerable<dynamic> ExecuteQuery(string sqlCommand)
+{
+    foreach(var x in ExecuteQuery(database_filepath, sqlCommand))
+    {
+        yield return x;
+    }
+}
+
+#!csharp
+
+#r "nuget: ScottPlot, 4.1.65"
+using Microsoft.DotNet.Interactive.Formatting;
+Formatter.Register(typeof(ScottPlot.Plot), (p, w) => 
+    w.Write(((ScottPlot.Plot)p).GetImageHTML()), HtmlFormatter.MimeType);

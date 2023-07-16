@@ -1,0 +1,89 @@
+#!meta
+
+{"kernelInfo":{"defaultKernelName":"csharp","items":[{"aliases":[],"name":"csharp"}]}}
+
+#!csharp
+
+#!import "05-stat-library.dib"
+
+#!csharp
+
+///////////////////////
+// Query
+///////////////////////
+
+var query_connections =
+from info in ExecuteQuery("SELECT * FROM connections")
+let date = DateTime.ParseExact(info.date, "yyyy-MM-dd HH:mm:ss", CultureInfo.InvariantCulture)
+let date_month = date.ToString("yyyy-MM")
+
+where date < new DateTime(2023, 7, 1)
+
+group info by new {date = date_month} into g
+let date_month = g.Key.date
+let users = g.Select(info => info.name).Distinct()
+orderby date_month
+select new 
+{
+    date = DateTime.ParseExact(date_month, "yyyy-MM", CultureInfo.InvariantCulture),
+    date_month, 
+    count = users.Count(), 
+    users
+};
+var list_connections = query_connections.ToList();
+
+
+///////////////////////
+// Plot
+///////////////////////
+var plt = new ScottPlot.Plot(600, 400);
+plt.Title($"Monthly Active Users" +
+    $"\nfrom {list_connections.Min(o => o.date).ToString("yyyy-MM")}" +
+    $" to {list_connections.Max(o => o.date).ToString("yyyy-MM")}");
+
+double[] xs = list_connections.Select(o => (double)o.date.ToOADate()).ToArray();
+double[] ys = list_connections.Select(o => (double)o.count).ToArray();
+var bar = plt.AddBar(ys, xs);
+
+bar.BarWidth = 20;
+bar.BorderLineWidth = 0;
+
+// Then tell the axis to display tick labels using a time format
+plt.XAxis.DateTimeFormat(true);
+
+// Lower the graph to y 0
+plt.SetAxisLimits(yMin: 0);
+
+// X Axis dates
+List<int> list_year = 
+list_connections
+.Select(o => (int)o.date.Year)
+.Distinct()
+.OrderBy(y => y)
+.ToList();
+
+double[] xPositions = list_year.Select(year => new DateTime(year, 1, 1).ToOADate()).ToArray();
+string[] xLabels = list_year.Select(year => year.ToString()).ToArray();
+plt.XAxis.ManualTickPositions(xPositions, xLabels);
+
+
+///////////////////////
+// Plot display
+///////////////////////
+display(plt);
+plt.SaveFig(Path.Join(chart_folderpath, "mau-connections.png"));
+
+
+///////////////////////
+// Stat
+///////////////////////
+DateTime last = query_connections.Max(o => o.date);
+
+int month_quantity = 12;
+
+var average =
+query_connections
+.Where(o => o.date > last.AddMonths(-month_quantity))
+.Average(o => o.count);
+
+display($"average of {average:N2} players on the last {month_quantity} months");
